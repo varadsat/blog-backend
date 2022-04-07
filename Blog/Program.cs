@@ -39,4 +39,11 @@ app.MapPost("/seedpost", async (BlogDbContext context) =>
      await context.SaveChangesAsync();
      return Results.Ok();
  });
+
+using (var scope = app.Services.CreateScope())
+using (var context = scope.ServiceProvider.GetRequiredService<BlogDbContext>())
+{
+    await context.Database.MigrateAsync();
+}
+
 app.Run();
