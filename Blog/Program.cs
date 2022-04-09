@@ -39,15 +39,15 @@ app.MapPost("/addblog", async (BlogDbContext context, Blog.Models.Post post) =>
      await context.SaveChangesAsync();
      return Results.Ok();
  });
-app.MapPost("/delblog/{id}", async (BlogDbContext context, int id) =>
+app.MapDelete("/delblog/{id}", async (BlogDbContext context, int id) =>
 {
-    try
+  
+    var itemToRemove = await context.Posts.FirstOrDefaultAsync(x => x.Id == id);
+    if (itemToRemove != null)
     {
-        var itemToRemove = await context.Posts.FirstAsync(x => x.Id == id);
         context.Posts.Remove(itemToRemove);
-    }
-    catch (InvalidOperationException) { }
-    await context.SaveChangesAsync();
+        await context.SaveChangesAsync();
+    }      
     return Results.Ok();
 });
 app.MapPost("/seedpost", async (BlogDbContext context) =>
