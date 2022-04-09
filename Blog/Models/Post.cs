@@ -13,7 +13,6 @@ namespace Blog.Models
         public string Title { get; set; }
         public DateTime PublishedAt { get; set; } = DateTime.Now;
         public string[] Tags { get; set; }
-        [MaxLength(10)]
         public string Body { get; set; }
         public int AuthorId { get; set; }
         public Author Author { get; set; }
