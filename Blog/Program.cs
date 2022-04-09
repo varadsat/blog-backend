@@ -9,7 +9,7 @@ builder.Services.AddCors(options =>
                 options.AddDefaultPolicy(
                     builder =>
                     {
-                        builder.AllowAnyHeader().WithOrigins(isDevelopment ? "http://localhost:3000" : "https://thevarad.me").AllowCredentials();
+                        builder.AllowAnyHeader().AllowAnyMethod().WithOrigins(isDevelopment ? "http://localhost:3000" : "https://thevarad.me").AllowCredentials();
                     }));
 
 var app = builder.Build();
