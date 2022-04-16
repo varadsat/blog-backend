@@ -10,9 +10,8 @@ namespace Blog.Data
 {
     public class BlogDbContext : DbContext
     {
-        public BlogDbContext(DbContextOptions options) : base(options)
-        {
-        }
+        public BlogDbContext(DbContextOptions options) : base(options) { }
+
         public DbSet<Post> Posts { get; set; }
         public DbSet<Author> Authors { get; set; }
 

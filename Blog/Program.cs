@@ -1,9 +1,12 @@
 using Blog.Data;
+using Blog.Models;
+using Blog.Models.DTOs;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<BlogDbContext>(options => options.UseSqlite("Data Source=Blog.db"));
+builder.Services.AddScoped<PostRepository>();
 var isDevelopment = builder.Environment.IsDevelopment();
 builder.Services.AddCors(options =>
                 options.AddDefaultPolicy(
@@ -23,39 +26,30 @@ app.UseHttpsRedirection();
 // TODO: Refactor to Services and Repositories
 // TODO: Write Unit Tests
 
-app.MapGet("/posts", (BlogDbContext context, HttpContext httpContext) =>
+app.MapGet("/posts",async(PostRepository repo) =>
 {
-    return context.Posts.Include(x => x.Author).ToListAsync();
+    var posts =await repo.GetAllPosts();
+    return Results.Ok(posts);
 });
 
-app.MapGet("/posts/{postId}", (BlogDbContext context, int postId) =>
+app.MapGet("/posts/{postId}", async (PostRepository repo, int postId) =>
 {
-    return context.Posts.Include(x => x.Author).FirstOrDefaultAsync(p => p.Id == postId);
+    var post = await repo.GetPostById(postId);
+    if(post is not null)
+        return Results.Ok(post);
+    return Results.NotFound();
 });
 
-app.MapPost("/addblog", async (BlogDbContext context, Blog.Models.Post post) =>
+app.MapPost("/addblog",async (PostRepository repo, Blog.Models.Post post) =>
  {
-     await context.Posts.AddAsync(post);
-     await context.SaveChangesAsync();
+     await repo.AddPost(post);
      return Results.Ok();
  });
-app.MapDelete("/delblog/{id}", async (BlogDbContext context, int id) =>
-{
-  
-    var itemToRemove = await context.Posts.FirstOrDefaultAsync(x => x.Id == id);
-    if (itemToRemove != null)
-    {
-        context.Posts.Remove(itemToRemove);
-        await context.SaveChangesAsync();
-    }      
-    return Results.Ok();
+app.MapDelete("/delblog/{id}", async (PostRepository repo, int id) =>
+{ 
+    var deletedPost = await repo.DeletePost(id);     
+    return deletedPost != null ? Results.Ok() : Results.NotFound();
 });
-app.MapPost("/seedpost", async (BlogDbContext context) =>
- {
-     await context.Posts.AddAsync(new Blog.Models.Post { Author = new Blog.Models.Author { Name = "Varad", ImageUrl = "sample.png" }, Body = "Lorem Ipsum è un testo segnaposto utilizzato nel settore della tipografia e della stampa. Lorem Ipsum è considerato il testo segnaposto standard sin dal sedicesimo secolo, quando un anonimo tipografo prese una cassetta di caratteri e li assemblò per preparare un testo campione.Lorem Ipsum è un testo segnaposto utilizzato nel settore della tipografia e della stampa. Lorem Ipsum è considerato il testo segnaposto standard sin dal sedicesimo secolo, quando un anonimo tipografo prese una cassetta di caratteri e li assemblò per preparare un testo campione.", PublishedAt = DateTime.UtcNow, Tags = new string[] { "hello", "world" }, Title = "Sqlite" });
-     await context.SaveChangesAsync();
-     return Results.Ok();
- });
 
 using (var scope = app.Services.CreateScope())
 using (var context = scope.ServiceProvider.GetRequiredService<BlogDbContext>())
