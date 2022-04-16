@@ -1,10 +1,12 @@
 using Blog.Data;
+using Blog.Models;
 using Blog.Models.DTOs;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<BlogDbContext>(options => options.UseSqlite("Data Source=Blog.db"));
+builder.Services.AddScoped<PostRepository>();
 var isDevelopment = builder.Environment.IsDevelopment();
 builder.Services.AddCors(options =>
                 options.AddDefaultPolicy(
@@ -24,13 +26,10 @@ app.UseHttpsRedirection();
 // TODO: Refactor to Services and Repositories
 // TODO: Write Unit Tests
 
-app.MapGet("/posts",async (BlogDbContext context, HttpContext httpContext) =>
+app.MapGet("/posts",(PostRepository repo) =>
 {
-    var postDTO = context.Posts.Select(p=> new PostDTO() 
-    { 
-        Id=p.Id, Title = p.Title, Body = p.Body, PublishedAt = p.PublishedAt, AuthorId = p.AuthorId
-    }); 
-    return postDTO;
+    var posts = repo.GetAllPosts();
+    return Results.Ok(posts.Result);
 });
 
 app.MapGet("/posts/{postId}", (BlogDbContext context, int postId) =>
