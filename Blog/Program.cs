@@ -26,33 +26,29 @@ app.UseHttpsRedirection();
 // TODO: Refactor to Services and Repositories
 // TODO: Write Unit Tests
 
-app.MapGet("/posts",(PostRepository repo) =>
+app.MapGet("/posts",async(PostRepository repo) =>
 {
-    var posts = repo.GetAllPosts();
-    return Results.Ok(posts.Result);
+    var posts =await repo.GetAllPosts();
+    return Results.Ok(posts);
 });
 
-app.MapGet("/posts/{postId}", (BlogDbContext context, int postId) =>
+app.MapGet("/posts/{postId}", async (PostRepository repo, int postId) =>
 {
-    return context.Posts.Include(x => x.Author).FirstOrDefaultAsync(p => p.Id == postId);
+    var post = await repo.GetPostById(postId);
+    if(post is not null)
+        return Results.Ok(post);
+    return Results.NotFound();
 });
 
-app.MapPost("/addblog", async (BlogDbContext context, Blog.Models.Post post) =>
+app.MapPost("/addblog",async (PostRepository repo, Blog.Models.Post post) =>
  {
-     await context.Posts.AddAsync(post);
-     await context.SaveChangesAsync();
+     await repo.AddPost(post);
      return Results.Ok();
  });
-app.MapDelete("/delblog/{id}", async (BlogDbContext context, int id) =>
-{
-  
-    var itemToRemove = await context.Posts.FirstOrDefaultAsync(x => x.Id == id);
-    if (itemToRemove != null)
-    {
-        context.Posts.Remove(itemToRemove);
-        await context.SaveChangesAsync();
-    }      
-    return Results.Ok();
+app.MapDelete("/delblog/{id}", async (PostRepository repo, int id) =>
+{ 
+    var deletedPost = await repo.DeletePost(id);     
+    return deletedPost != null ? Results.Ok() : Results.NotFound();
 });
 
 using (var scope = app.Services.CreateScope())
