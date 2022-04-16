@@ -45,7 +45,7 @@ app.MapPost("/addblog",async (PostRepository repo, Blog.Models.Post post) =>
      await repo.AddPost(post);
      return Results.Ok();
  });
-app.MapDelete("/delblog/{id}", async (PostRepository repo, int id) =>
+app.MapPost("/delblog/{id}", async (PostRepository repo, int id) =>
 { 
     var deletedPost = await repo.DeletePost(id);     
     return deletedPost != null ? Results.Ok() : Results.NotFound();
